@@ -22,8 +22,8 @@
 
 ulimit -s unlimited
 
-MAMBA_ENV="tina"
-eval "$(mamba shell hook --shell bash)" && mamba activate "${MAMBA_ENV}"
+ENV_NAME="tina"
+conda activate "${ENV_NAME}"
 echo "START TIME: $(date)"
 echo "PYTHON ENV: $(which python)"
 

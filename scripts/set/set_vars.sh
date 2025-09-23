@@ -50,7 +50,7 @@ export TRITON_CACHE_DIR="${CACHE_DIR}/triton_cache"
 
 export HF_TOKEN="TODO"
 git config --global credential.helper store
-huggingface-cli login --token $HF_TOKEN --add-to-git-credential
+hf auth login --token $HF_TOKEN --add-to-git-credential
 
 export HF_HOME="${CACHE_DIR}/huggingface"
 export HUGGINGFACE_HUB_CACHE="${HF_HOME}/hub"
