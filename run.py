@@ -48,10 +48,9 @@ def train(
     # 2. load and configure model
     logger.info(f"Loading model from {args.model.model_name_or_path}")
     model = AutoModelForCausalLM.from_pretrained(
-        args.model.model_name_or_path, 
-        torch_dtype= torch.bfloat16 if args.model.dtype == "bfloat16" else torch.float16, 
-        attn_implementation="flash_attention_2",
-        device_map="auto"
+        args.model.model_name_or_path,
+        torch_dtype= torch.bfloat16 if args.model.dtype == "bfloat16" else torch.float16,
+        attn_implementation="flash_attention_2"
     )
     logger.info(f"Model loaded successfully")
 
