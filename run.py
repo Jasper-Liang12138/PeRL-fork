@@ -21,7 +21,7 @@ def fuzzy_jobs(
     args.training.output_dir = output_dir
     args.training.run_name = output_dir # training run name is the output_dir
     if not os.path.exists(output_dir): # check if output_dir exists
-        os.makedirs(output_dir)
+        os.makedirs(output_dir, exist_ok=True)
     else:
         logger.info(f"Output directory {output_dir} already exists, using it")
     set_seed(args.common.seed)
@@ -37,6 +37,13 @@ def fuzzy_jobs(
             config=vars(args.training)
         )
         logger.info(f"Trackio initialized successfully")
+    elif "wandb" in args.training.report_to:
+        import wandb
+        wandb.init(
+            name=args.training.run_name,
+            config=vars(args.training),
+        )
+        logger.info(f"Wandb initialized successfully")
     
     return args
 
@@ -69,9 +76,15 @@ def train(
     # 3. configure lora
     if args.peft.use_peft:
         logger.info(f"Detected PEFT configuration, configuring lora")
-        from open_tinker.lora.adapter import apply_lora, apply_adalora
+        from open_tinker.lora.adapter import apply_lora, apply_adalora, apply_vera, apply_miss, apply_pissa
         if args.peft.type == "adalora":
             model = apply_adalora(model, args)
+        elif args.peft.type == "vera":
+            model = apply_vera(model, args)
+        elif args.peft.type == "miss":
+            model = apply_miss(model, args)
+        elif args.peft.type == "pissa":
+            model = apply_pissa(model, args)
         else:
             model = apply_lora(model, args)
         logger.info(f"Lora configured successfully")

@@ -1,3 +1,12 @@
+## All LoRAs work?
+
+- LoRA ✅
+- DoRA ✅
+- MiSS ✅
+- AdaLoRA ❌
+- VeRA
+- RandLoRA
+
 ## Env Settings
 
 ```
