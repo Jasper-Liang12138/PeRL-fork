@@ -3,10 +3,10 @@ datasets
 deepspeed
 fire
 huggingface-hub
-liger-kernel
 math-verify
 torch
 transformers
 trl
 trackio
 tomli
+peft
