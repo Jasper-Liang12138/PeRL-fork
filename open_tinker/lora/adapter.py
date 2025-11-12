@@ -4,7 +4,18 @@ def apply_lora(model, args):
         config = LoraConfig(
             peft_type="LORA",
             task_type=args.peft.task_type,
-            use_dora=args.peft.use_dora,
+            r=args.peft.r,
+            lora_alpha=args.peft.lora_alpha,
+            target_modules=args.peft.target_modules,
+            lora_dropout=args.peft.lora_dropout,
+        )
+        return get_peft_model(model, config)
+    elif args.peft.type == "dora":
+        from peft import LoraConfig, get_peft_model
+        config = LoraConfig(
+            peft_type="LORA",
+            use_dora=True,
+            task_type=args.peft.task_type,
             r=args.peft.r,
             lora_alpha=args.peft.lora_alpha,
             target_modules=args.peft.target_modules,
