@@ -51,6 +51,7 @@ class TrainingConfig:
     vllm_mode: str = "colocate"
     vllm_gpu_memory_utilization: float = 0.4
     use_liger_kernel: bool = True
+    epsilon_high: float = 0.2
     lr_scheduler_type: str = "cosine"
     lr_scheduler_kwargs: Dict[str, Any] = field(default_factory=dict)
     loss_type: str = "dr_grpo"  # default is dapo which does not support by liger kernel lol
@@ -58,7 +59,7 @@ class TrainingConfig:
     beta: float = 0.0
     warmup_ratio: float = 0.0
     per_device_train_batch_size: int = 1
-
+    top_entropy_quantile: float = 0.2
 
 @dataclass
 class LoggingConfig:

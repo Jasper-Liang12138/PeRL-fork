@@ -1,22 +1,30 @@
-## All LoRAs work?
+# PERL: Parameter-Efficient Reinforcement Learning  
+> A minimal, modular, and lightning-fast framework for fine-tuning language models with PEFT + RL.
 
-https://github.com/Yuheng2000/Awesome-LoRA
+---
 
-- LoRA ✅
-- DoRA ✅
-- MiSS ✅
-- AdaLoRA ❌
-- VeRA ✅
-- PiSSA ✅ 
-- RandLoRA
-- P-tuning
-- Layernorm tuning
-- DeLoRA
-- X-LoRA
-- LoKr
-- 
+## 🧩 Supported Parameter-Efficient Methods
 
-## Env Settings
+| Method        | Status | Notes |
+|---------------|--------|-------|
+| LoRA          | ✅     | Fully tested |
+| DoRA          | ✅     | Weight-decomposed LoRA |
+| MiSS          | ✅     | Mixture of Sub-Spaces |
+| VeRA          | ✅     | Vector-based Random Adaptation |
+| PiSSA         | ✅     | Principal Singular values & Singular vectors Adaptation |
+| AdaLoRA       | ❌     | Rank allocation unstable under RL |
+| RandLoRA      | 🔄     | Coming soon |
+| P-Tuning v2   | 🔄     | Prefix tuning variant |
+| LayerNorm Tuning | 🔄  | Efficient bias-only |
+| DeLoRA        | 🔄     | Dynamic expansion |
+| X-LoRA        | 🔄     | Cross-layer routing |
+| LoKr          | 🔄     | Kronecker-product adaptation |
+
+> Full list & references: [Awesome-LoRA](https://github.com/Yuheng2000/Awesome-LoRA)
+
+---
+
+## ⚙️ Environment Setup
 
 ```
 pip install -r requirements.txt

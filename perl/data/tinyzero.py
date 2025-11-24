@@ -2,7 +2,15 @@ from datasets import load_dataset
 from math_verify import LatexExtractionConfig, parse, verify
 
 from .system_prompts import SYSTEM_PROMPT
-from .numina import format_reward
+import re
+
+# reward function from https://huggingface.co/datasets/burtenshaw/lora-without-regrets/blob/main/grpo.py
+def format_reward(completions, **kwargs):
+    """Reward function that checks if the completion has a specific format."""
+    pattern = r"^<think>.*?</think>\s*<answer>.*?</answer>$"
+    completion_contents = [completion[0]["content"] for completion in completions]
+    return [1.0 if re.match(pattern, content) else 0.0 for content in completion_contents]
+
 
 def accuracy_reward(completions, **kwargs):
     """Reward function that checks if the completion is the same as the ground truth."""
