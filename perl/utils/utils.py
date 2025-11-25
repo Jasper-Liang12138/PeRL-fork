@@ -70,13 +70,26 @@ def parse_args_to_config():
                 parts = config_path.split('.')
                 obj = config
                 for part in parts[:-1]:
-                    if not hasattr(obj, part):
-                        raise ValueError(f"Unknown config section: {part}")
-                    obj = getattr(obj, part)
+                    if isinstance(obj, dict):
+                        # Handle dict attributes (e.g., lr_scheduler_kwargs)
+                        if part not in obj:
+                            obj[part] = {}
+                        obj = obj[part]
+                    else:
+                        # Handle object attributes
+                        if not hasattr(obj, part):
+                            raise ValueError(f"Unknown config section: {part}")
+                        obj = getattr(obj, part)
+                
                 attr_name = parts[-1]
-                if not hasattr(obj, attr_name):
-                    raise ValueError(f"Unknown config attribute: {attr_name}")
-                setattr(obj, attr_name, value)
+                if isinstance(obj, dict):
+                    # Set value in dict
+                    obj[attr_name] = value
+                else:
+                    # Set attribute on object
+                    if not hasattr(obj, attr_name):
+                        raise ValueError(f"Unknown config attribute: {attr_name}")
+                    setattr(obj, attr_name, value)
                 i += 2  # Skip the value
             else:
                 raise ValueError(f"Missing value for {arg}")
