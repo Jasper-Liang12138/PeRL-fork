@@ -42,5 +42,11 @@ def apply_lora(model, args):
             task_type=args.peft.task_type,
         )
         return get_peft_model(model, lora_config)
+    elif args.peft.type == "milora":
+        from .milora import add_svd_initialized_lora
+        return add_svd_initialized_lora(
+            model=model,
+            rank=args.peft.r,
+        )
     else:
         raise ValueError(f"Unsupported PEFT type: {args.peft.type}")
