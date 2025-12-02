@@ -5,7 +5,7 @@ LOG_FILE=${OUTPUT_DIR}/output.log
 
 mkdir -p ${OUTPUT_DIR}
 
-CUDA_VISIBLE_DEVICES=0,1,2,3 ACCELERATE_LOG_LEVEL=info \
+CUDA_VISIBLE_DEVICES=4,5,6,7 ACCELERATE_LOG_LEVEL=info \
     accelerate launch \
     --main_process_port 29505 \
     --config_file scripts/accelerate/ds_zero2_4gpu.yaml \
@@ -53,4 +53,5 @@ CUDA_VISIBLE_DEVICES=0,1,2,3 ACCELERATE_LOG_LEVEL=info \
     --config.logging.wandb_project "grpo-full-qwen3-4b" \
     --config.dataset.dataset_name_or_path "open-r1/DAPO-Math-17k-Processed" \
     --config.dataset.example_numbers 1000000000 \
+    --config.training.resume_from_checkpoint "outputs/train/dapo_lorafa_20251201_161746/checkpoint-512" \
     &> ${LOG_FILE}

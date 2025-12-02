@@ -114,7 +114,12 @@ def train(
         train_dataset=train_dataset,
         optimizers=(optimizer, None) if optimizer is not None else (None, None)
     )
-    trainer.train()
+    
+    # 支持从 checkpoint 恢复训练
+    resume_checkpoint = args.training.resume_from_checkpoint
+    if resume_checkpoint == "true":
+        resume_checkpoint = True
+    trainer.train(resume_from_checkpoint=resume_checkpoint)
     logger.info(f"Training completed successfully")
     trainer.save_model(training_args.output_dir)
     logger.info(f"Model saved to {training_args.output_dir}")
