@@ -2,6 +2,7 @@ import argparse
 import asyncio
 import atexit
 import logging
+import shutil
 import signal
 import sys
 import json
@@ -20,10 +21,19 @@ from perl.eval.vllm import (
     wait_for_vllm_ready,
     generate_with_vllm_async,
 )
-from perl.eval.grader import grade_answer_verl
+from perl.eval.grader import grade_answer_perl
 
 
-PROMPT_TEMPLATE = """{problem} Please reason step by step, and put your final answer within \\boxed{{}}."""
+PROMPT_TEMPLATES = {
+    "lighteval": """{problem} Please reason step by step, and put your final answer within \\boxed{{}}.""",
+    "open-r1": """
+Solve the following math problem step by step. The last line of your response should be of the form Answer: $Answer (without quotes) where $Answer is the answer to the problem.
+
+{problem}
+
+Remember to put your answer on its own line after "Answer:".
+""".strip(),
+}
 
 DATASETS = {
     "aime2024": ("HuggingFaceH4/aime_2024", "train"),
@@ -43,7 +53,9 @@ def load_dataset_from_hf(dataset_name: str):
         raise ValueError(f"Unsupported dataset: {dataset_name}")
 
 
-def prepare_prompt(dataset_name: str, sample: Dict[str, Any]) -> str:
+def prepare_prompt(
+    dataset_name: str, sample: Dict[str, Any], prompt_template: str
+) -> str:
     """Construct model input prompt based on sample, modify as needed."""
     problem = None
     if "problem" in sample:
@@ -54,10 +66,17 @@ def prepare_prompt(dataset_name: str, sample: Dict[str, Any]) -> str:
         problem = sample["prompt"]
     else:
         raise ValueError(f"Unsupported sample format: {sample}")
-    return PROMPT_TEMPLATE.format(problem=problem)
+    return prompt_template.format(problem=problem)
 
 
-def score_response(dataset_name: str, response: str, sample: Dict[str, Any]) -> float:
+def score_response(
+    dataset_name: str, response: str, sample: Dict[str, Any]
+) -> Tuple[float, float]:
+    """
+    Returns:
+      - score: float, score of the response
+      - format_score: float, score of the response format
+    """
     ground_truth = None
     if "answer" in sample:
         ground_truth = sample["answer"]
@@ -65,7 +84,7 @@ def score_response(dataset_name: str, response: str, sample: Dict[str, Any]) -> 
         ground_truth = sample["label"]
     else:
         raise ValueError(f"Unsupported sample format: {sample}")
-    return 1.0 if grade_answer_verl(response, str(ground_truth)) else 0.0
+    return grade_answer_perl(response, str(ground_truth))
 
 
 def parse_args() -> Tuple[argparse.Namespace, List[str], List[str]]:
@@ -87,6 +106,11 @@ def parse_args() -> Tuple[argparse.Namespace, List[str], List[str]]:
         "--dataset",
         default="aime2024",
         help="Dataset abbreviation to evaluate, comma separated (e.g., aime2024).",
+    )
+    parser.add_argument(
+        "--prompt-format",
+        default="lighteval",
+        help="Prompt format template to use.",
     )
     parser.add_argument(
         "--rollout-n",
@@ -251,6 +275,7 @@ async def generate_responses(
                             and "rollout_id" in data
                             and "response" in data
                             and data["response"] != ""
+                            and int(data["rollout_id"]) < rollout_n
                         ):
                             generated_results.append(data)
                             cache.add((data["problem_id"], data["rollout_id"]))
@@ -266,8 +291,10 @@ async def generate_responses(
         tasks_to_process: List[Tuple[int, int, str, int]] = []
         ports_cycle = len(ports)
 
+        prompt_template = PROMPT_TEMPLATES[args.prompt_format]
+
         for idx, sample in enumerate(ds):
-            prompt = prepare_prompt(dataset_name, sample)
+            prompt = prepare_prompt(dataset_name, sample, prompt_template)
             for rollout_id in range(rollout_n):
                 if (idx, rollout_id) in cache:
                     continue
@@ -385,10 +412,11 @@ def evaluate_dataset_results(
         records_for_metrics: List[Dict[str, Any]] = []
         raw_stats_list: List[Dict[str, Any]] = []
 
+        prompt_template = PROMPT_TEMPLATES[args.prompt_format]
         with result_file.open("w", encoding="utf-8") as rf:
             for idx, sample in enumerate(ds):
                 problem_id = idx
-                prompt = prepare_prompt(dataset_name, sample)
+                prompt = prepare_prompt(dataset_name, sample, prompt_template)
 
                 rollouts = outputs_map.get(problem_id, [])
                 # Sort by rollout_id
@@ -397,7 +425,7 @@ def evaluate_dataset_results(
 
                 responses = []
                 scores = []
-                truncated_flags = []
+                format_scores = []
 
                 for rid in range(rollout_n):
                     if rid not in rollout_dict:
@@ -407,25 +435,12 @@ def evaluate_dataset_results(
                     resp = rollout_dict.get(rid, "")
                     responses.append(resp)
 
-                    # Check if response is truncated (doesn't contain \boxed)
-                    is_truncated = "\\boxed" not in resp if resp else True
-                    truncated_flags.append(1.0 if is_truncated else 0.0)
-
                     if resp:
-                        try:
-                            s_res = score_response(dataset_name, resp, sample)
-                            if isinstance(s_res, tuple):
-                                score = float(s_res[0])
-                            else:
-                                score = float(s_res)
-                        except Exception as e:
-                            logger.warning(
-                                "Scoring error p=%d r=%d: %s", problem_id, rid, e
-                            )
-                            score = 0.0
+                        score, format_score = score_response(dataset_name, resp, sample)
                     else:
-                        score = 0.0
+                        score, format_score = 0.0, 0.0
                     scores.append(score)
+                    format_scores.append(format_score)
 
                     records_for_metrics.append(
                         {"problem_id": problem_id, "rollout_id": rid, "score": score}
@@ -442,8 +457,9 @@ def evaluate_dataset_results(
                 else:
                     avg_val = max_val = min_val = std_val = 0.0
 
-                # Calculate truncated average (proportion of truncated responses)
-                truncated_avg = statistics.mean(truncated_flags) if truncated_flags else 0.0
+                format_score_avg = (
+                    statistics.mean(format_scores) if format_scores else 0.0
+                )
 
                 record = {
                     "problem_id": problem_id,
@@ -454,7 +470,7 @@ def evaluate_dataset_results(
                     "max": max_val,
                     "min": min_val,
                     "std": std_val,
-                    "truncated": truncated_avg,
+                    "format_score_avg": format_score_avg,
                     "data_source": dataset_name,
                 }
                 rf.write(json.dumps(record, ensure_ascii=False) + "\n")
@@ -466,7 +482,7 @@ def evaluate_dataset_results(
                         "max": max_val,
                         "min": min_val,
                         "std": std_val,
-                        "truncated": truncated_avg,
+                        "format_score_avg": format_score_avg,
                     }
                 )
 
@@ -477,10 +493,18 @@ def evaluate_dataset_results(
                 "max": statistics.mean(x["max"] for x in raw_stats_list),
                 "min": statistics.mean(x["min"] for x in raw_stats_list),
                 "std": statistics.mean(x["std"] for x in raw_stats_list),
-                "truncated": statistics.mean(x["truncated"] for x in raw_stats_list),
+                "format_score_avg": statistics.mean(
+                    x["format_score_avg"] for x in raw_stats_list
+                ),
             }
         else:
-            summary = {"avg": 0.0, "max": 0.0, "min": 0.0, "std": 0.0, "truncated": 0.0}
+            summary = {
+                "avg": 0.0,
+                "max": 0.0,
+                "min": 0.0,
+                "std": 0.0,
+                "format_score_avg": 0.0,
+            }
 
         final_json = {
             "data_source": dataset_name,
@@ -592,6 +616,16 @@ async def main() -> None:
 
     stop_vllm_processes(processes, logger)
     logger.info("All evaluation processes completed.")
+
+    if args.adapter:
+        merged_model_dir = Path(args.result_dir) / "model"
+        if merged_model_dir.exists():
+            logger.info("Deleting merged model directory: %s", merged_model_dir)
+            try:
+                shutil.rmtree(merged_model_dir)
+                logger.info("Merged model directory deleted.")
+            except Exception as e:
+                logger.warning("Failed to delete merged model directory: %s", e)
 
 
 if __name__ == "__main__":
