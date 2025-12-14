@@ -1,14 +1,14 @@
 unset WANDB_DISABLED
-OUTPUT_DIR=outputs/dapo_slicefine_$(date +%Y%m%d_%H%M%S)
+OUTPUT_DIR=outputs/dapo_slicefine_qwen2_5_1_5b_$(date +%Y%m%d_%H%M%S)
 # OUTPUT_DIR=outputs/debug
 LOG_FILE=${OUTPUT_DIR}/output.log
 
 mkdir -p ${OUTPUT_DIR}
 
-CUDA_VISIBLE_DEVICES=0,3 ACCELERATE_LOG_LEVEL=info \
+CUDA_VISIBLE_DEVICES=4,5,6,7 ACCELERATE_LOG_LEVEL=info \
     accelerate launch \
     --main_process_port 29505 \
-    --config_file scripts/accelerate/ds_zero2_2gpu.yaml \
+    --config_file scripts/accelerate/ds_zero2_4gpu.yaml \
     run.py train \
     --config.common.seed 42 \
     --config.common.debug false \
