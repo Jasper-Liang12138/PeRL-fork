@@ -1,14 +1,15 @@
 ckpts/
 results/
 outputs/
-.verl
 # Byte-compiled / optimized / DLL files
 .DS_Store
 completion_samples/*
 __pycache__/
 *.py[cod]
 *$py.class
-
+ckpts
+.verl
+logs
 # C extensions
 *.so
 .litellm_cache/
@@ -38,7 +39,7 @@ results
 #  before PyInstaller builds the exe, so as to inject date/other infos into it.
 *.manifest
 *.spec
-
+.eval
 # Installer logs
 pip-log.txt
 pip-delete-this-directory.txt
