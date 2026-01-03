@@ -1,10 +1,17 @@
 <div align="center">
-
+<img src="https://pbs.twimg.com/media/G9uYc9HasAAWCm5?format=jpg&name=medium" alt="logo" width="400" margin="10px"></img>
+  
 # PERL: Parameter-Efficient Reinforcement Learning  
 > A minimal, modular, and lightning-fast framework for PEFT + RL.
+
+| [**AlphaXiv**](https://www.alphaxiv.org/abs/2512.23165)
+| [**ArXiv**](https://www.arxiv.org/abs/2512.23165)
+| [**Checkpoints**](https://huggingface.co/MikaStars39/PeRL)
+| [**Wandb Log**](https://wandb.ai/mikastars-zhejiang-university/PeRL_logs)
+
 </div>
 
-## 🧩 Supported Parameter-Efficient Methods
+## Supported Parameter-Efficient Methods
 
 | Method | Status | Description |
 | :--- | :--- | :--- |
