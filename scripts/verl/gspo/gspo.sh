@@ -6,7 +6,7 @@ DATA_ROOT=${DATA_ROOT:-$PWD}
 
 # wandb
 backend=megatron # fsdp, fsdp2, megatron
-project_name=wuxibin_gspo
+project_name=gspo
 experiment_name=qwen3-30B-base-grpo-$backend
 default_local_dir=$DATA_ROOT/checkpoint/$project_name/$experiment_name
 
@@ -100,34 +100,8 @@ ACTOR_CONFIG="
     actor_rollout_ref.actor.ppo_mini_batch_size=$ppo_mini_batch_size \
     actor_rollout_ref.actor.ppo_max_token_len_per_gpu=$actor_max_token_len_per_gpu"
 
-# Critic model config
-CIRITC_CONFIG="
-    critic.optim.lr=$critic_lr \
-    critic.model.path=$critic_model_path \
-    critic.model.use_remove_padding=True \
-    critic.ppo_max_token_len_per_gpu=$critic_max_token_len_per_gpu \
-    critic.ulysses_sequence_parallel_size=$USP_SIZE"
-
-CRITIC_FSDP_CONFIG="${ACTOR_FSDP_CONFIG//actor_rollout_ref.actor/critic.model}"
-CRITIC_MEGATRON_CONFIG="${ACTOR_MEGATRON_CONFIG//actor_rollout_ref.actor/critic}"
-
-if [[ $backend == "megatron" ]]; then
-    CONFIG_NAME=ppo_megatron_trainer
-    ACTOR_CONFIG="$ACTOR_CONFIG $ACTOR_MEGATRON_CONFIG"
-    if [[ $adv_estimator == "gae" ]]; then
-        CIRITC_CONFIG="$CIRITC_CONFIG $CRITIC_MEGATRON_CONFIG"
-    else
-        CIRITC_CONFIG=""
-    fi
-else # fsdp, fsdp2
-    CONFIG_NAME=ppo_trainer
-    ACTOR_CONFIG="$ACTOR_CONFIG $ACTOR_FSDP_CONFIG"
-    if [[ $adv_estimator == "gae" ]]; then
-        CIRITC_CONFIG="$CIRITC_CONFIG $CRITIC_FSDP_CONFIG"
-    else
-        CIRITC_CONFIG=""
-    fi
-fi
+CONFIG_NAME=ppo_megatron_trainer
+ACTOR_CONFIG="$ACTOR_CONFIG $ACTOR_MEGATRON_CONFIG"
 
 # ===================================== Inference =====================================
 rollout_name=vllm
@@ -192,6 +166,5 @@ python3 -m verl.trainer.main_ppo \
     trainer.total_epochs=10 \
     trainer.total_training_steps=500 \
     $ACTOR_CONFIG \
-    $CIRITC_CONFIG \
     $ROLLOUT_CONFIG \
     $REWARD_CONFIG
