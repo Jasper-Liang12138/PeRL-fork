@@ -2,7 +2,7 @@ import pandas as pd
 import os
 import json
 if __name__=="__main__":
-    file_path = "/mnt/llm-train/users/explore-train/qingyu/data/DAPO-Math-17k-verl/train.parquet"
+    file_path = "data/DAPO-Math-17k-verl/train.parquet"
     df = pd.read_parquet(file_path)
     data = df.head(5)
     print(data)

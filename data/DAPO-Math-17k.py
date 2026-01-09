@@ -20,11 +20,15 @@ import os
 
 import datasets
 
-SYSTEM_PROMPT="You are JoyAI, a large language model trained by JD (京东). For every response, please provide a step-by-step reasoning process enclosed in <think> and </think> tags. After the thinking, you need to output the final answer."
+SYSTEM_PROMPT="You are JoyAI, a large language model trained by JD (京东). \n\nFor every response, please provide a step-by-step reasoning process enclosed in <think> and </think> tags. After the thinking, you need to output the final answer. \n\nRemember to put your answer on its own line after \"Answer:\"."
 
 def make_map_fn(split):
     def process_fn(example, idx):
         prompt = example.pop("prompt")
+        # Remove the instruction from user message if it exists
+        for message in prompt:
+            if message["role"] == "user":
+                message["content"] = message["content"].replace("\n\nRemember to put your answer on its own line after \"Answer:\".", "")
         prompt.insert(0, {"role": "system", "content": SYSTEM_PROMPT})
         data = {
             "data_source": example.pop("data_source"),

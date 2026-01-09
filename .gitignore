@@ -12,6 +12,7 @@ ckpts
 logs
 
 debug.json
+data/*
 
 # C extensions
 *.so

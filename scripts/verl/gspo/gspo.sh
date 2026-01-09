@@ -1,8 +1,9 @@
 # run Qwen3-30B GSPO with new model engine
 set -euox pipefail
 
-HDFS_ROOT=${HDFS_ROOT:-$PWD}
-DATA_ROOT=${DATA_ROOT:-$PWD}
+# ---------------------------- system config ---------------------------
+export HF_ENDPOINT="https://hf-mirror.com"
+export CUDA_HOME="/usr/local/cuda"
 
 # ---------------------------- wandb config ----------------------------
 
@@ -10,7 +11,8 @@ debug=true
 backend=megatron # fsdp, fsdp2, megatron
 project_name=gspo
 experiment_name=qwen3-30B-base-grpo-$backend
-default_local_dir=$DATA_ROOT/checkpoint/$project_name/$experiment_name
+timestamp=$(date +%Y%m%d_%H%M%S)
+default_local_dir=/mnt/llm-train/users/explore-train/qingyu/PeRL/outputs/${timestamp}_${experiment_name}
 
 if [ "$debug" = true ]; then
     logger=console
@@ -29,7 +31,6 @@ kl_loss_coef=0.001
 clip_ratio_low=3e-4
 clip_ratio_high=4e-4
 actor_lr=1e-6
-critic_lr=2e-6
 gae_gamma=1.0
 gae_lam=0.95
 critic_warmup=0
@@ -39,8 +40,8 @@ use_remove_padding=True
 
 # ---------------------------- Data/Model ----------------------------
 
-train_files=$DATA_ROOT/dataset/BytedTsinghua-SIA/DAPO-Math-17k/data/dapo-math-17k.parquet
-test_files=$DATA_ROOT/dataset/aime-2024.parquet
+train_files=/mnt/llm-train/users/explore-train/qingyu/PeRL/data/DAPO-Math-17k-verl/train.parquet
+test_files=/mnt/llm-train/users/explore-train/qingyu/PeRL/data/aime_2024-verl/train.parquet
 
 actor_model_path=/mnt/llm-train/users/explore-train/zhangyuqi60/Nomerge/ms-swift/hf_outputs/qwen3-30b-s1-0103
 
@@ -60,12 +61,15 @@ n_resp_per_prompt_val=1
 actor_max_token_len_per_gpu=$(((max_prompt_length + max_response_length) * 3))
 
 # Megatron parallelism config
-TP_SIZE=2
+TP_SIZE=4
 CP_SIZE=1
 PP_SIZE=1
 VPP_SIZE=null
 EP_SIZE=8
 ETP_SIZE=1
+
+ARNOLD_WORKER_GPU=8
+ARNOLD_WORKER_NUM=4
 
 param_offload=True
 grad_offload=True
@@ -135,7 +139,8 @@ ROLLOUT_CONFIG="
     actor_rollout_ref.rollout.n=$n_resp_per_prompt \
     actor_rollout_ref.rollout.val_kwargs.top_p=$top_p \
     actor_rollout_ref.rollout.val_kwargs.temperature=$temperature \
-    actor_rollout_ref.rollout.val_kwargs.n=$n_resp_per_prompt_val"
+    actor_rollout_ref.rollout.val_kwargs.n=$n_resp_per_prompt_val \
+    actor_rollout_ref.model.trust_remote_code=True"
 
 REWARD_CONFIG="
     reward_model.reward_manager=dapo \
@@ -161,6 +166,7 @@ DATA_CONFIG="
     data.max_response_length=$max_response_length \
     data.filter_overlong_prompts=True \
     data.filter_overlong_prompts_workers=64 \
+    data.trust_remote_code=True \
     data.truncation='error'"
 
 TRAINER_CONFIG="
@@ -183,6 +189,9 @@ CONFIG_NAME=ppo_megatron_trainer
 ACTOR_CONFIG="$ACTOR_CONFIG $ACTOR_MEGATRON_CONFIG"
 
 # ---------------------------- Run Training ----------------------------
+
+# Create output directory if it doesn't exist
+mkdir -p $default_local_dir
 
 python3 -m verl.trainer.main_ppo \
     --config-path=./config \
