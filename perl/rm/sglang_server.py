@@ -1,78 +1,46 @@
-import asyncio
 import logging
-import os
-import signal
-import subprocess
-import sys
+from typing import Any, Dict, Optional
 
-import aiohttp
+import sglang as sgl
 
 logger = logging.getLogger("AllInOne-RM")
 
 
 class SGLangManager:
-    """Lifecycle manager for the SGLang subprocess."""
+    """Lifecycle manager for the SGLang offline engine."""
 
     def __init__(self, config):
         self.config = config
-        self.process = None
+        self.engine = None
 
     def start(self):
-        """Start the SGLang subprocess."""
-        cmd = [
-            sys.executable, "-m", "sglang.launch_server",
-            "--model-path", self.config.model_path,
-            "--port", str(self.config.sglang_port),
-            "--host", self.config.sglang_host,
-            "--trust-remote-code",
-        ]
-
-        # Optional parallelism settings.
-        if getattr(self.config, "sglang_tp_size", 1) > 1:
-            cmd.extend(["--tp-size", str(self.config.sglang_tp_size)])
-        if getattr(self.config, "sglang_dp_size", 1) > 1:
-            cmd.extend(["--dp-size", str(self.config.sglang_dp_size)])
-        
-        logger.info(f"🚀 Starting SGLang service (Model: {self.config.model_path})...")
-        logger.info(f"Command: {' '.join(cmd)}")
-        
-        # Start a new process group so we can terminate it safely.
-        self.process = subprocess.Popen(
-            cmd,
-            stdout=sys.stdout,
-            stderr=sys.stderr,
-            preexec_fn=os.setsid,
+        """Start the SGLang offline engine."""
+        logger.info(f"🚀 Starting SGLang offline engine (Model: {self.config.model_path})...")
+        self.engine = sgl.Engine(
+            model_path=self.config.model_path,
+            tp_size=self.config.sglang_tp_size,
+            dp_size=self.config.sglang_dp_size,
+            trust_remote_code=self.config.sglang_trust_remote_code,
         )
 
     async def wait_until_ready(self):
-        """Poll the health endpoint until SGLang is ready."""
-        health_url = f"http://localhost:{self.config.sglang_port}/health"
-        logger.info("⏳ Waiting for model warmup (may take a few minutes)...")
-        
-        async with aiohttp.ClientSession() as session:
-            while True:
-                try:
-                    async with session.get(health_url) as resp:
-                        if resp.status == 200:
-                            logger.info("✅ SGLang service is ready.")
-                            return
-                except Exception:
-                    pass
-                
-                # Exit early if the subprocess died.
-                if self.process.poll() is not None:
-                    logger.error("❌ SGLang exited unexpectedly. Check VRAM or model path.")
-                    sys.exit(1)
-                
-                await asyncio.sleep(5)
+        """No-op for offline engine (kept for lifecycle compatibility)."""
+        return
 
     def stop(self):
-        """Stop the SGLang subprocess safely."""
-        if self.process:
-            logger.info("🛑 Stopping SGLang service...")
+        """Shutdown the SGLang offline engine."""
+        if self.engine:
+            logger.info("🛑 Shutting down SGLang offline engine...")
             try:
-                os.killpg(os.getpgid(self.process.pid), signal.SIGTERM)
-                self.process.wait(timeout=10)
+                self.engine.shutdown()
             except Exception as e:
-                logger.warning(f"Stop process issue (may already be closed): {e}")
-            logger.info("👋 SGLang service stopped.")
+                logger.warning(f"Shutdown issue (may already be closed): {e}")
+            logger.info("👋 SGLang offline engine stopped.")
+
+    def generate(self, prompt: str, sampling_params: Optional[Dict[str, Any]] = None) -> str:
+        """Run a single-prompt generation on the offline engine."""
+        if not self.engine:
+            raise RuntimeError("SGLang engine is not initialized.")
+        params = sampling_params or {"temperature": 0.0, "top_p": 1.0, "max_new_tokens": 128}
+        outputs = self.engine.generate([prompt], params)
+        return outputs[0].get("text", "").strip()

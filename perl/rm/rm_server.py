@@ -1,10 +1,11 @@
 import argparse
+import asyncio
 import logging
 from contextlib import asynccontextmanager
 
-import aiohttp
 import uvicorn
 from fastapi import FastAPI
+from pydantic import BaseModel
 
 from .math_verifier import extract_answer, extract_boxed_answer, compute_score
 from .sglang_server import SGLangManager
@@ -28,31 +29,57 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(title="All-in-One RM Server", lifespan=lifespan)
 
-@app.post("/reward")
-async def calculate_reward_with_rm_server(args, sample):
-    
-    prompt = sample.prompt  
-    response = sample.response  
-    label = sample.label 
-    metadata = sample.metadata # must contains a rm_type
 
+class RewardRequest(BaseModel):
+    prompt: str
+    response: str
+    label: str
+    metadata: dict | None = None
+
+
+async def call_qwen_extractor(text: str) -> str:
+    """Call the offline engine for answer extraction."""
+    extraction_prompt = (
+        "You are a math answer extractor. Extract the final answer. "
+        "Output ONLY the answer inside \\boxed{} if possible, or just the answer/number. "
+        "Do not output explanation.\n\n"
+        f"Text:\n{text}"
+    )
+    return await asyncio.to_thread(sglang_manager.generate, extraction_prompt)
+
+
+@app.post("/reward")
+async def calculate_reward(req: RewardRequest):
+    metadata = req.metadata or {}
     rm_type = metadata.get("rm_type", "math")
 
     if rm_type == "math":
+        # Step 1: rule-based extraction.
+        final_ans = extract_answer(req.response)
 
-        qwen_res = await call_qwen_extractor(req.response)
-        final_ans = extract_boxed_answer(qwen_res)
-        score = compute_score(final_ans, req.label)
+        # Step 2: offline engine extraction if rule-based fails.
+        if not final_ans:
+            qwen_res = await call_qwen_extractor(req.response)
+            if qwen_res:
+                if "\\boxed" in qwen_res:
+                    final_ans = extract_boxed_answer(qwen_res)
+                else:
+                    final_ans = qwen_res
+
+        if not final_ans:
+            score = 0.0
+        else:
+            score = compute_score(final_ans, req.label)
 
     else:
-        
         logger.error(f"Unsupported RM type: {rm_type}")
+        final_ans = None
         score = 0.0
         
     # Lightweight logging.
     logger.info(f"GT: {req.label[:20]}... | Extracted: {final_ans} | Score: {score}")
     
-    return score
+    return {"score": score}
 
 @app.get("/health")
 def health():
