@@ -1,11 +1,13 @@
+import logging
+import sys
+
 try:
     from math_verify.errors import TimeoutException
     from math_verify.metric import math_metric
     from math_verify.parser import ExprExtractionConfig, LatexExtractionConfig
 except ImportError:
+    print("❌ Error: Please install math-verify. Run `pip install math-verify`")
     sys.exit(1)
-
-import logging
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 logger = logging.getLogger("AllInOne-RM")
