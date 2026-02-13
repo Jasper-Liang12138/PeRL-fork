@@ -13,6 +13,7 @@ class ModelConfig:
     """Model configuration settings"""
     model_name_or_path: str = None # keep none for cli reminder "Qwen/Qwen2.5-3B-Instruct"
     dtype: str = "bfloat16"
+    use_npu: bool = False  # set to true for Huawei Ascend NPU
 
 
 @dataclass

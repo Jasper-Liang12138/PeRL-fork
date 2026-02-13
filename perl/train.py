@@ -58,6 +58,15 @@ def train(
     print(config)
     args = fuzzy_jobs(config)
 
+    # Initialize NPU if needed
+    if args.model.use_npu:
+        try:
+            import torch_npu
+            logger.info("NPU support enabled - torch_npu imported successfully")
+        except ImportError:
+            logger.warning("torch_npu not found, falling back to CPU/CUDA")
+            args.model.use_npu = False
+
     # 1. load tokenizer and dataset
     logger.info(f"Loading tokenizer from {args.model.model_name_or_path}")
     tokenizer = AutoTokenizer.from_pretrained(args.model.model_name_or_path)
@@ -85,10 +94,21 @@ def train(
 
     # 2. load and configure model
     logger.info(f"Loading model from {args.model.model_name_or_path}")
+
+    # Determine attention implementation based on device
+    attn_implementation = None if args.model.use_npu else "flash_attention_2"
+
+    model_kwargs = {
+        "torch_dtype": torch.bfloat16 if args.model.dtype == "bfloat16" else torch.float16,
+    }
+
+    # Only add attn_implementation if not using NPU
+    if attn_implementation:
+        model_kwargs["attn_implementation"] = attn_implementation
+
     model = AutoModelForCausalLM.from_pretrained(
         args.model.model_name_or_path,
-        torch_dtype= torch.bfloat16 if args.model.dtype == "bfloat16" else torch.float16,
-        attn_implementation="flash_attention_2"
+        **model_kwargs
     )
     logger.info(f"Model loaded successfully")
 
