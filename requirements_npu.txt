@@ -2,7 +2,7 @@
 # 基于 ubuntu22.04-teleformers-cann8.2.rc1-npu:v0.2.0.post1.ssh
 
 # 核心依赖
-torch==2.1.0
+torch
 torch-npu  # 华为NPU适配包
 accelerate
 datasets
@@ -11,7 +11,7 @@ fire
 huggingface-hub
 math-verify
 transformers
-trl  # 不使用vllm版本
+trl==0.14.0  # 不使用vllm版本
 peft
 wandb
 
