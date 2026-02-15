@@ -18,10 +18,10 @@ npu-smi info
 
 ```bash
 # 安装基础依赖
-pip install -r requirements_npu.txt
+pip install -r requirements_vllm_npu.txt
 
 # 或使用uv（更快）
-uv pip install -r requirements_npu.txt
+uv pip install -r requirements_vllm_npu.txt
 
 # 安装vLLM支持（如果未安装）
 pip install vllm==0.15.1
