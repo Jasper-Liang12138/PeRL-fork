@@ -11,7 +11,7 @@ fire
 huggingface-hub
 math-verify
 transformers
-trl>=0.12.0  # 不使用vllm版本
+trl==0.14.0  # 不使用vllm版本
 peft
 wandb
 
