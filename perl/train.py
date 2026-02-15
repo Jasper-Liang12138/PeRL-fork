@@ -136,13 +136,13 @@ def train(
     elif args.model.dtype == "float16":
         training_params['fp16'] = True
 
-    # Add missing parameters expected by Trainer
-    if 'manually_stop_step' not in training_params:
-        training_params['manually_stop_step'] = None
-
     training_args = GRPOConfig(
         **training_params,
     )
+
+    # Set attributes that Trainer expects but GRPOConfig doesn't accept as init parameters
+    if not hasattr(training_args, 'manually_stop_step'):
+        training_args.manually_stop_step = None
 
     # 5.Train
     logger.info(f"Training model with GRPO")
