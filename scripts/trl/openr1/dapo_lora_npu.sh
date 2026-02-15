@@ -19,7 +19,7 @@ ACCELERATE_LOG_LEVEL=info \
     run.py train \
     --config.common.seed 42 \
     --config.common.debug false \
-    --config.model.model_name_or_path "Qwen/Qwen2.5-7B" \
+    --config.model.model_name_or_path "/work/mount/qwen7b/Qwen/Qwen2___5-7B" \
     --config.model.dtype "bfloat16" \
     --config.model.use_npu true \
     --config.peft.use_peft true \
