@@ -35,14 +35,14 @@ ACCELERATE_LOG_LEVEL=info \
     --config.training.output_dir "${OUTPUT_DIR}" \
     --config.training.run_name "${OUTPUT_DIR}" \
     --config.training.remove_unused_columns false \
-    --config.training.gradient_accumulation_steps 8 \
+    --config.training.gradient_accumulation_steps 16 \
     --config.training.num_train_epochs 1 \
-    --config.training.max_completion_length 8192 \
-    --config.training.num_generations 8 \
+    --config.training.max_completion_length 2048 \
+    --config.training.num_generations 4 \
     --config.training.warmup_ratio 0.0 \
     --config.training.max_prompt_length 512 \
     --config.training.logging_steps 1 \
-    --config.training.per_device_train_batch_size 2 \
+    --config.training.per_device_train_batch_size 1 \
     --config.training.save_strategy "steps" \
     --config.training.save_steps 64 \
     --config.training.max_steps 1024 \
