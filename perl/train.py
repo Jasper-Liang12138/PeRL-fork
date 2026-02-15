@@ -130,6 +130,12 @@ def train(
     for param in custom_params:
         training_params.pop(param, None)
 
+    # Set bf16 based on model dtype to match DeepSpeed config
+    if args.model.dtype == "bfloat16":
+        training_params['bf16'] = True
+    elif args.model.dtype == "float16":
+        training_params['fp16'] = True
+
     training_args = GRPOConfig(
         **training_params,
     )
