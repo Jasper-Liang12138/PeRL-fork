@@ -120,10 +120,14 @@ def train(
         logger.info(f"Lora configured successfully")
 
     # 4.Training configuration
-    # Filter out vllm-related parameters that GRPOConfig doesn't accept
+    # Filter out custom parameters that GRPOConfig doesn't accept
     training_params = vars(args.training).copy()
-    vllm_params = ['use_vllm', 'vllm_mode', 'vllm_gpu_memory_utilization']
-    for param in vllm_params:
+    custom_params = [
+        'use_vllm', 'vllm_mode', 'vllm_gpu_memory_utilization',
+        'epsilon_high', 'use_liger_kernel', 'loss_type', 'top_entropy_quantile',
+        'reward_weights'  # Dynamically added, not part of GRPOConfig
+    ]
+    for param in custom_params:
         training_params.pop(param, None)
 
     training_args = GRPOConfig(
