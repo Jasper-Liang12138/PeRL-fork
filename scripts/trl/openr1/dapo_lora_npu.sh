@@ -46,7 +46,9 @@ ACCELERATE_LOG_LEVEL=info \
     --config.training.save_strategy "steps" \
     --config.training.save_steps 64 \
     --config.training.max_steps 10 \
-    --config.training.use_vllm false \
+    --config.training.use_vllm true \
+    --config.training.vllm_mode colocate \
+    --config.training.vllm_gpu_memory_utilization 0.3 \
     --config.training.top_entropy_quantile 1.0 \
     --config.training.epsilon_high 0.28 \
     --config.training.lr_scheduler_type "constant" \
