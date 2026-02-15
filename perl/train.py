@@ -122,21 +122,29 @@ def train(
     # 4.Training configuration
     # Filter out custom parameters that GRPOConfig doesn't accept
     training_params = vars(args.training).copy()
-    custom_params = [
-        'epsilon_high', 'use_liger_kernel', 'loss_type', 'top_entropy_quantile',
-        'reward_weights'  # Dynamically added, not part of GRPOConfig
-    ]
-    for param in custom_params:
-        training_params.pop(param, None)
+
+    # Try to create GRPOConfig and catch parameter errors
+    from trl import GRPOConfig
+    import inspect
+
+    # Get valid GRPOConfig parameters
+    valid_params = set(inspect.signature(GRPOConfig.__init__).parameters.keys()) - {'self', 'args', 'kwargs'}
+
+    # Filter out invalid parameters
+    filtered_params = {k: v for k, v in training_params.items() if k in valid_params}
+    removed_params = set(training_params.keys()) - set(filtered_params.keys())
+
+    if removed_params:
+        logger.info(f"Filtered out parameters not accepted by GRPOConfig: {removed_params}")
 
     # Set bf16 based on model dtype to match DeepSpeed config
     if args.model.dtype == "bfloat16":
-        training_params['bf16'] = True
+        filtered_params['bf16'] = True
     elif args.model.dtype == "float16":
-        training_params['fp16'] = True
+        filtered_params['fp16'] = True
 
     training_args = GRPOConfig(
-        **training_params,
+        **filtered_params,
     )
 
     # Set attributes that Trainer expects but GRPOConfig doesn't accept as init parameters
