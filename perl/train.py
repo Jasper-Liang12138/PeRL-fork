@@ -136,6 +136,10 @@ def train(
     elif args.model.dtype == "float16":
         training_params['fp16'] = True
 
+    # Add missing parameters expected by Trainer
+    if 'manually_stop_step' not in training_params:
+        training_params['manually_stop_step'] = None
+
     training_args = GRPOConfig(
         **training_params,
     )
