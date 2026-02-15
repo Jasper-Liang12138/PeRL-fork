@@ -38,7 +38,7 @@ ACCELERATE_LOG_LEVEL=info \
     --config.training.gradient_accumulation_steps 16 \
     --config.training.num_train_epochs 1 \
     --config.training.max_completion_length 256 \
-    --config.training.num_generations 1 \
+    --config.training.num_generations 2 \
     --config.training.warmup_ratio 0.0 \
     --config.training.max_prompt_length 512 \
     --config.training.logging_steps 1 \
@@ -46,9 +46,7 @@ ACCELERATE_LOG_LEVEL=info \
     --config.training.save_strategy "steps" \
     --config.training.save_steps 64 \
     --config.training.max_steps 10 \
-    --config.training.use_vllm true \
-    --config.training.vllm_mode colocate \
-    --config.training.vllm_gpu_memory_utilization 0.3 \
+    --config.training.use_vllm false \
     --config.training.top_entropy_quantile 1.0 \
     --config.training.epsilon_high 0.28 \
     --config.training.lr_scheduler_type "constant" \

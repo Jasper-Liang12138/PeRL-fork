@@ -1,6 +1,14 @@
 # 华为昇腾NPU + vLLM 训练评估指南
 
-本指南介绍如何在华为昇腾NPU上使用vLLM加速进行GRPO训练和模型评估。
+本指南介绍如何在华为昇腾NPU上进行GRPO训练，并使用vLLM加速训练后的模型评估和推理。
+
+## 重要说明
+
+**当前配置策略**：
+- ✅ **训练阶段**：使用标准 `model.generate()`（不使用vLLM）
+- ✅ **评估/推理阶段**：使用 vLLM 加速（提速2-5倍）
+
+**原因**：TRL 0.14.0（稳定版本）在训练时不支持vLLM。虽然TRL 0.18.0+支持vLLM，但仅支持vLLM 0.10-0.12版本，与NPU所需的vllm-ascend 0.13.0（需要vLLM 0.13.0+）不兼容。
 
 ## 一、环境准备
 
@@ -46,85 +54,52 @@ python -c "import torch; import torch_npu; print('✅ NPU available:', torch.npu
 - Platform: <NPUPlatform object>
 - ✅ NPU available: True
 
-## 二、vLLM训练模式
+## 二、训练模式（不使用vLLM）
 
-### 2.1 TRL vLLM支持说明
+### 2.1 为什么训练时不用vLLM
 
-从TRL v0.18.0开始，GRPO Trainer原生支持vLLM集成，可以在训练的生成阶段使用vLLM加速：
+由于版本兼容性限制，当前训练配置不使用vLLM：
 
-- **训练阶段**：使用标准的模型前向传播和梯度计算
-- **生成阶段**：使用vLLM加速推理（提速1.5-1.7倍）
-- **权重同步**：TRL自动在训练和vLLM之间同步模型权重
+| 组件 | 版本要求 | 冲突说明 |
+|------|---------|---------|
+| TRL 0.18.0+ | 支持vLLM 0.10-0.12 | 与vllm-ascend不兼容 |
+| vllm-ascend 0.13.0 | 需要vLLM 0.13.0+ | 与TRL支持的版本不兼容 |
+| TRL 0.14.0 | 不支持vLLM | 稳定，用于训练 |
 
-### 2.2 vLLM运行模式
+### 2.2 训练配置
 
-#### Colocate模式（推荐）
-- 训练和推理在同一组NPU上运行
-- 内存共享，无需额外NPU资源
-- 通过`vllm_gpu_memory_utilization`控制内存分配
-- 适合单机多卡训练场景
+当前训练脚本已配置为使用标准生成：
 
 ```bash
---config.training.use_vllm true
---config.training.vllm_mode colocate
---config.training.vllm_gpu_memory_utilization 0.3  # vLLM占用30%内存
+--config.training.use_vllm false  # 禁用vLLM
+--config.training.num_generations 2  # GRPO需要至少2个生成
+--config.training.per_device_train_batch_size 1
+--config.training.gradient_accumulation_steps 16
 ```
 
-#### Server模式
-- vLLM作为独立服务运行在其他NPU上
-- 需要额外的NPU资源
-- 适合有多组NPU的分布式环境
+## 三、开始训练（标准模式）
+
+### 3.1 运行训练
 
 ```bash
---config.training.use_vllm true
---config.training.vllm_mode server
---config.training.vllm_server_host "localhost"
---config.training.vllm_server_port 8000
-```
-
-## 三、开始训练
-
-### 3.1 使用vLLM加速训练（推荐）
-
-```bash
-# 直接运行（已配置vLLM）
+# 直接运行训练脚本
 bash scripts/trl/openr1/dapo_lora_npu.sh
 ```
 
-当前脚本已启用vLLM，关键配置：
-```bash
---config.training.use_vllm true                      # 启用vLLM
---config.training.vllm_mode colocate                 # 协同模式
---config.training.vllm_gpu_memory_utilization 0.3    # vLLM内存占用
---config.training.per_device_train_batch_size 1      # 批次大小
---config.training.gradient_accumulation_steps 16     # 梯度累积
---config.training.max_completion_length 256          # 最大生成长度
-```
+训练使用标准的 `model.generate()` 进行生成，不依赖vLLM。
 
-### 3.2 不使用vLLM训练
-
-如果遇到vLLM兼容性问题，可以禁用vLLM：
-
-```bash
-# 修改脚本中的参数
---config.training.use_vllm false
-```
-
-### 3.3 自定义训练参数
-
-编辑 `scripts/trl/openr1/dapo_lora_npu.sh`，常用参数：
+### 3.2 关键训练参数
 
 | 参数 | 说明 | 推荐值 |
 |------|------|--------|
 | model_name_or_path | 基础模型路径 | /work/mount/qwen7b/Qwen/Qwen2___5-7B |
-| use_vllm | 启用vLLM加速 | true |
-| vllm_mode | vLLM运行模式 | colocate |
-| vllm_gpu_memory_utilization | vLLM内存占用比例 | 0.3 |
+| use_vllm | 启用vLLM加速 | false（训练时） |
 | r | LoRA rank | 16 |
 | lora_alpha | LoRA alpha | 32 |
 | per_device_train_batch_size | 每卡批次大小 | 1 |
 | gradient_accumulation_steps | 梯度累积步数 | 16 |
-| max_completion_length | 最大生成长度 | 256-1024 |
+| max_completion_length | 最大生成长度 | 256 |
+| num_generations | 每个prompt生成数 | 2（GRPO最小要求） |
 | learning_rate | 学习率 | 1e-5 |
 | max_steps | 最大训练步数 | 1024 |
 
@@ -160,38 +135,9 @@ npu-smi info -l
 - 查看项目：grpo-lora-qwen2-5-7b-npu
 - 监控：loss、reward、learning_rate等
 
-## 五、模型评估
+## 五、使用vLLM进行模型评估和推理
 
-### 5.1 使用vLLM加速评估
-
-训练完成后，使用vLLM进行快速评估：
-
-```python
-from vllm import LLM, SamplingParams
-
-# 初始化vLLM（自动使用NPU）
-llm = LLM(
-    model="/path/to/trained/model",
-    max_model_len=2048,
-    trust_remote_code=True
-)
-
-# 配置生成参数
-sampling_params = SamplingParams(
-    temperature=0.8,
-    top_p=0.95,
-    max_tokens=512
-)
-
-# 批量生成
-prompts = ["问题1", "问题2", "问题3"]
-outputs = llm.generate(prompts, sampling_params)
-
-for output in outputs:
-    print(output.outputs[0].text)
-```
-
-### 5.2 使用评估脚本
+训练完成后，使用vLLM加速模型评估和推理，速度提升2-5倍。
 
 ```bash
 # 评估训练好的模型
@@ -200,31 +146,29 @@ python perl/eval.py \
     --adapter /path/to/lora/adapter \
     --dataset "open-r1/DAPO-Math-17k-Processed" \
     --result_dir results/ \
-    --dp_size 4
+    --dp_size 4 \
+    --use_vllm  # 启用vLLM加速
 ```
 
 ## 六、性能对比
 
-### 6.1 训练速度
+### 6.1 训练速度（标准模式 vs 理论vLLM模式）
 
-| 模式 | 每步耗时 | 1024步总时间 | 加速比 |
-|------|----------|--------------|--------|
-| 不使用vLLM | ~9分钟 | ~15-20小时 | 1.0x |
-| 使用vLLM (colocate) | ~5-6分钟 | ~9-12小时 | 1.5-1.7x |
+| 模式 | 每步耗时 | 1024步总时间 | 说明 |
+|------|----------|--------------|------|
+| 标准生成（当前） | ~9分钟 | ~15-20小时 | 稳定可靠 |
+| vLLM加速（理论） | ~5-6分钟 | ~9-12小时 | 需要版本兼容 |
 
-### 6.2 内存占用
+**注**：由于版本兼容性问题，当前无法在训练中使用vLLM。
 
-| 模式 | 训练内存 | vLLM内存 | 总内存 |
-|------|----------|----------|--------|
-| 不使用vLLM | 20-25GB | 0GB | 20-25GB |
-| 使用vLLM | 15-18GB | 6-8GB | 21-26GB |
-
-### 6.3 推理速度
+### 6.2 评估/推理速度
 
 | 模式 | 吞吐量 (tokens/s) | 加速比 |
 |------|-------------------|--------|
 | model.generate() | ~50-80 | 1.0x |
 | vLLM | ~150-300 | 2-5x |
+
+**vLLM在评估和推理阶段可以显著提速！**
 
 ## 七、常见问题
 

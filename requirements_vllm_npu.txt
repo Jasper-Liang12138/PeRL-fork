@@ -4,12 +4,10 @@
 # 基于 ubuntu22.04-teleformers-cann8.2.rc1-npu:v0.2.0.post1.ssh
 
 # 核心深度学习框架
-torch==2.9.1
-torchvision==0.24.1
-torchaudio==2.9.1
+torch==2.9.0
 torch-npu==2.9.0
 
-# vLLM及其NPU支持
+# vLLM及其NPU支持（仅用于评估和推理）
 vllm==0.15.1
 vllm-ascend==0.13.0
 
@@ -18,15 +16,15 @@ transformers==4.57.6
 tokenizers==0.22.2
 accelerate>=0.20.0
 
-# TRL，支持vLLM的版本（v0.18.0+开始支持）
-trl==0.28.0 
+# TRL - 稳定版本（训练时不使用vLLM）
+trl==0.14.0
 
 # DeepSpeed
 deepspeed>=0.14.0
 
 # 数据处理
 datasets==4.5.0
-numpy==1.26.4
+numpy<2.0.0  # vllm-ascend要求
 pandas>=2.0.0
 
 # PEFT (参数高效微调)
@@ -42,10 +40,11 @@ pyyaml>=6.0
 tqdm>=4.65.0
 packaging>=23.0
 
-# NPU相关
-triton-ascend==3.2.0
-
 # 注意事项：
-# 1. vllm-ascend 0.13.0 要求 torch==2.8.0，但我们使用 torch 2.9.1
-#    这个版本冲突在实际使用中可以忽略，因为vllm-ascend插件已经能识别NPU
-# 2. 如果遇到问题，可以尝试降级到完全兼容的版本组合
+# 1. TRL 0.14.0 在训练时不支持vLLM，但vLLM可用于训练后的评估和推理
+# 2. vLLM版本冲突说明：
+#    - TRL 0.18.0+ 支持vLLM，但仅支持vLLM 0.10-0.12
+#    - vllm-ascend 0.13.0 需要vLLM 0.13.0+
+#    - 这两者无法兼容，因此训练时禁用vLLM
+# 3. torch版本必须是2.9.0以匹配torch-npu 2.9.0
+# 4. numpy必须<2.0.0以兼容vllm-ascend
