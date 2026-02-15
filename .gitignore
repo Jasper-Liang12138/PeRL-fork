@@ -188,3 +188,5 @@ cython_debug/
 
 # PyPI configuration file
 .pypirc
+fusion_result.json
+kernel_meta/buildPidInfo.json
