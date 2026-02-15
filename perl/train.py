@@ -143,6 +143,8 @@ def train(
     # Set attributes that Trainer expects but GRPOConfig doesn't accept as init parameters
     if not hasattr(training_args, 'manually_stop_step'):
         training_args.manually_stop_step = None
+    if not hasattr(training_args, 'async_checkpoint'):
+        training_args.async_checkpoint = False
 
     # 5.Train
     logger.info(f"Training model with GRPO")
