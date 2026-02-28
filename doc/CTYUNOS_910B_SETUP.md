@@ -69,6 +69,12 @@ source .venv_ctyunos/bin/activate
 
 ### 2.2 安装核心依赖
 
+# torch 从 PyPI 安装 CPU 版本（torch-npu 会接管 NPU 后端）
+pip install torch==2.8.0
+
+# torch-npu 从 PyPI 正常安装
+pip install torch-npu==2.8.0.post2
+
 ```bash
 # 方式1：使用pip安装（推荐用于CTyunOS）
 pip install -r requirements_vllm_npu.txt
@@ -78,8 +84,8 @@ uv pip install -r requirements_vllm_npu.txt
 ```
 
 **关键依赖版本**：
-- torch==2.9.0
-- torch-npu==2.9.0
+- torch==2.8.0
+- torch-npu==2.8.0.post2
 - transformers==4.57.6
 - trl==0.14.0
 - deepspeed>=0.14.0
@@ -307,7 +313,7 @@ echo $LD_LIBRARY_PATH
 
 # 重新安装torch-npu
 pip uninstall torch-npu
-pip install torch-npu==2.9.0
+pip install torch-npu==2.8.0.post2
 ```
 
 ### 8.2 CANN版本不匹配
@@ -320,8 +326,7 @@ pip install torch-npu==2.9.0
 cat /usr/local/Ascend/ascend-toolkit/latest/version.cfg
 
 # 确保torch-npu版本与CANN匹配
-# CANN 8.0 -> torch-npu 2.9.0
-# CANN 8.1 -> torch-npu 2.9.1
+# CANN 8.2.RC1 -> torch-npu 2.8.0.post2
 ```
 
 ### 8.3 权限问题

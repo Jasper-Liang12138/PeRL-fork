@@ -2,8 +2,9 @@
 # 适用于8张910B NPU的GRPO训练环境
 
 # 核心深度学习框架
-torch==2.9.0
-torch-npu==2.9.0
+# CANN 8.2.RC1 对应 torch-npu 2.6.0+，最新稳定版 2.8.0.post2
+torch==2.8.0
+torch-npu==2.8.0.post2
 
 # Transformers和相关
 transformers==4.57.6
@@ -42,7 +43,7 @@ math-verify>=0.1.0
 huggingface-hub>=0.20.0
 
 # CTyunOS特别说明：
-# 1. torch版本必须是2.9.0以匹配torch-npu 2.9.0
+# 1. torch版本必须是2.8.0以匹配torch-npu 2.8.0.post2（CANN 8.2.RC1）
 # 2. numpy必须<2.0.0以兼容NPU运行时
 # 3. 不包含vLLM（训练时不使用，仅用于评估）
 # 4. 如需vLLM评估支持，额外安装：
