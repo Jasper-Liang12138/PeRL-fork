@@ -145,20 +145,21 @@ huggingface-cli download deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B \
 # 修改训练脚本中的模型路径即可
 ```
 
+
 **选项4：通过 ModelScope 下载 Qwen2.5-32B（推荐，国内速度快）**
 ```bash
 # 步骤1：下载模型（Python 3.9+ 兼容）
 python scripts/download_qwen25_32b_modelscope.py \
     --model_id Qwen/Qwen2.5-32B-Instruct \
-    --save_dir /path/to/models/Qwen2.5-32B-Instruct
+    --save_dir /mnt/nvme0/models/Qwen2.5-32B-Instruct
 
 # 步骤2：（可选）指定自定义缓存目录
 python scripts/download_qwen25_32b_modelscope.py \
-    --save_dir /data/models/Qwen2.5-32B-Instruct \
-    --cache_dir /data/modelscope_cache
+    --save_dir /mnt/nvme0/models/Qwen2.5-32B-Instruct \
+    --cache_dir /mnt/nvme0/modelscope_cache
 
 # 步骤3：运行 Qwen2.5-32B 专用训练脚本
-MODEL_PATH=/path/to/models/Qwen2.5-32B-Instruct \
+MODEL_PATH=/mnt/nvme0/models/Qwen2.5-32B-Instruct \
     bash scripts/trl/openr1/dapo_lora_qwen25_32b_ctyunos_910b_8gpu.sh
 ```
 

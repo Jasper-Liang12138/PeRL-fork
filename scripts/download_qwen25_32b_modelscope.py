@@ -87,7 +87,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--save_dir",
         type=str,
-        default="./models/Qwen2.5-32B-Instruct",
+        default="/mnt/nvme0/models/Qwen2.5-32B-Instruct",
         help="本地保存目录 (默认: ./models/Qwen2.5-32B-Instruct)",
     )
     parser.add_argument(

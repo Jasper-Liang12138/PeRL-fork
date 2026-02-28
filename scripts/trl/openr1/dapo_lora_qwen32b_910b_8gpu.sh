@@ -8,13 +8,13 @@
 # 【使用前必读】
 # 1. 先下载模型（如果还未下载）：
 #      python scripts/download_qwen25_32b_modelscope.py \
-#          --save_dir /path/to/models/Qwen2.5-32B-Instruct
+#          --save_dir /mnt/nvme0/models/Qwen2.5-32B-Instruct
 # 2. 修改下方 MODEL_PATH 为你的实际模型路径
 # 3. 32B 模型显存需求较大，建议调小 per_device_train_batch_size
 # ============================================================
 
 # ---------- 路径配置（按需修改）----------
-MODEL_PATH="${MODEL_PATH:-./models/Qwen2.5-32B-Instruct}"
+MODEL_PATH="${MODEL_PATH:-/mnt/nvme0/models/Qwen2.5-32B-Instruct}"
 
 unset WANDB_DISABLED
 OUTPUT_DIR=outputs/grpo_lora_qwen25_32b_ctyunos_910b_$(date +%Y%m%d_%H%M%S)
