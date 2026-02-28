@@ -1,0 +1,50 @@
+# CTyunOS 22.06.2 + 华为昇腾910B 专用依赖
+# 适用于8张910B NPU的GRPO训练环境
+
+# 核心深度学习框架
+torch==2.9.0
+torch-npu==2.9.0
+
+# Transformers和相关
+transformers==4.57.6
+tokenizers==0.22.2
+accelerate>=0.20.0
+
+# TRL - 稳定版本（训练时不使用vLLM）
+trl==0.14.0
+
+# DeepSpeed（ZeRO-2优化）
+deepspeed>=0.14.0
+
+# 数据处理
+datasets==4.5.0
+numpy<2.0.0  # NPU兼容性要求
+pandas>=2.0.0
+
+# PEFT (参数高效微调)
+peft>=0.8.0
+
+# 其他依赖
+opencv-python-headless==4.13.0.92
+fsspec==2025.10.0
+scipy>=1.10.0
+scikit-learn>=1.3.0
+wandb>=0.15.0
+pyyaml>=6.0
+tqdm>=4.65.0
+packaging>=23.0
+fire>=0.5.0
+
+# 数学验证（用于GRPO奖励计算）
+math-verify>=0.1.0
+
+# HuggingFace Hub
+huggingface-hub>=0.20.0
+
+# CTyunOS特别说明：
+# 1. torch版本必须是2.9.0以匹配torch-npu 2.9.0
+# 2. numpy必须<2.0.0以兼容NPU运行时
+# 3. 不包含vLLM（训练时不使用，仅用于评估）
+# 4. 如需vLLM评估支持，额外安装：
+#    pip install vllm==0.15.1 vllm-ascend==0.13.0
+# 5. flash-attention在NPU上不支持，训练代码会自动禁用
