@@ -176,7 +176,7 @@ MODEL_PATH=/mnt/nvme0/models/Qwen2.5-32B-Instruct \
 
 ### 3.2 数据集准备
 
-训练脚本默认使用 `open-r1/DAPO-Math-17k-Processed`：
+训练脚本默认使用 `../ft-dataset/kicad_sft_dataset_590.json`：
 
 ```bash
 # 数据集会自动从HuggingFace下载
