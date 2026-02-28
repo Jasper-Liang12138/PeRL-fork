@@ -371,13 +371,13 @@ sudo usermod -aG HwHiAiUser $USER
 
 ```bash
 # 进入项目目录
-cd /path/to/PeRL-fork
+cd /path/to/PeRL-fork 
 
 # 激活虚拟环境
 source .venv_ctyunos/bin/activate
 
 # 运行训练
-bash scripts/trl/openr1/dapo_lora_ctyunos_910b_8gpu.sh
+bash scripts/trl/openr1/dapo_lora_qwen32b_910b_8gpu.sh
 ```
 
 训练日志会保存在 `outputs/grpo_lora_ctyunos_910b_*/output.log`
