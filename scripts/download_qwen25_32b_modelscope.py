@@ -14,6 +14,7 @@ from __future__ import annotations
 import argparse
 import os
 import sys
+from typing import Optional  # 新增：导入兼容3.9的Optional类型
 
 
 def check_python_version():
@@ -41,7 +42,7 @@ def install_modelscope_if_missing():
         print("[INFO] modelscope 安装完成")
 
 
-def download_model(model_id: str, save_dir: str, cache_dir: str | None = None):
+def download_model(model_id: str, save_dir: str, cache_dir: Optional[str] = None):  # 修改：str | None → Optional[str]
     """
     使用 modelscope 下载模型到本地目录。
 
@@ -65,7 +66,7 @@ def download_model(model_id: str, save_dir: str, cache_dir: str | None = None):
     print("[INFO] 保存路径: {}".format(os.path.abspath(save_dir)))
     print("[INFO] 这可能需要较长时间，请耐心等待...\n")
 
-    downloaded_path = snapshot_download(**kwargs)
+    downloaded_path = snapshot_download(** kwargs)
 
     print("\n[SUCCESS] 模型下载完成！")
     print("[INFO] 模型路径: {}".format(downloaded_path))
