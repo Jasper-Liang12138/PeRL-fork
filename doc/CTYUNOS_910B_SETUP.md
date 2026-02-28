@@ -77,10 +77,10 @@ pip install torch-npu==2.8.0.post2
 
 ```bash
 # 方式1：使用pip安装（推荐用于CTyunOS）
-pip install -r requirements_vllm_npu.txt
+pip install -r requirements_ctyunos_910b.txt
 
 # 方式2：使用uv安装（更快，如果已安装uv）
-uv pip install -r requirements_vllm_npu.txt
+uv pip install -r requirements_ctyunos_910b.txt
 ```
 
 **关键依赖版本**：
