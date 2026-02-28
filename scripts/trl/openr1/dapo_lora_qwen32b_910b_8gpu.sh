@@ -70,7 +70,7 @@ ACCELERATE_LOG_LEVEL=info \
     --config.training.per_device_train_batch_size 1 \
     --config.training.save_strategy "steps" \
     --config.training.save_steps 64 \
-    --config.training.max_steps 10 \   #正式训练1024，测试10
+    --config.training.max_steps 10 \
     --config.training.use_vllm false \
     --config.training.top_entropy_quantile 1.0 \
     --config.training.epsilon_high 0.28 \
@@ -82,6 +82,6 @@ ACCELERATE_LOG_LEVEL=info \
     --config.logging.trackio_space_id "Open-Tinker/Open-Tinker" \
     --config.logging.trackio_project "grpo-lora-qwen25-32b-ctyunos-910b" \
     --config.logging.wandb_project "grpo-lora-qwen25-32b-ctyunos-910b" \
-    --config.dataset.dataset_name_or_path "../ft-dataset/kicad_sft_dataset_590.json" \
+    --config.dataset.dataset_name_or_path "/root/PERL-FORK/ft-dataset/kicad_sft_dataset_590.json" \
     --config.dataset.example_numbers 1000000000 \
     2>&1 | tee "${LOG_FILE}"
