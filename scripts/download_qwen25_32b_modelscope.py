@@ -1,12 +1,12 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
-通过 ModelScope 下载 Qwen2.5-32B-Instruct 模型
+通过 ModelScope 下载 Qwen3-32B 模型
 兼容 Python 3.9+
 
 用法:
     python scripts/download_qwen25_32b_modelscope.py
-    python scripts/download_qwen25_32b_modelscope.py --model_id Qwen/Qwen2.5-32B-Instruct --save_dir /path/to/models
+    python scripts/download_qwen25_32b_modelscope.py --model_id Qwen/Qwen3-32B --save_dir /path/to/models
 """
 
 from __future__ import annotations
@@ -47,7 +47,7 @@ def download_model(model_id: str, save_dir: str, cache_dir: Optional[str] = None
     使用 modelscope 下载模型到本地目录。
 
     Args:
-        model_id: ModelScope 上的模型 ID，如 'Qwen/Qwen2.5-32B-Instruct'
+        model_id: ModelScope 上的模型 ID，如 'Qwen/Qwen3-32B'
         save_dir: 本地保存路径
         cache_dir: 可选的缓存目录（None 表示使用默认）
     """
@@ -76,19 +76,19 @@ def download_model(model_id: str, save_dir: str, cache_dir: Optional[str] = None
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
-        description="通过 ModelScope 下载 Qwen2.5-32B 模型"
+        description="通过 ModelScope 下载 Qwen3-32B 模型"
     )
     parser.add_argument(
         "--model_id",
         type=str,
-        default="Qwen/Qwen2.5-32B-Instruct",
-        help="ModelScope 模型 ID (默认: Qwen/Qwen2.5-32B-Instruct)",
+        default="Qwen/Qwen3-32B",
+        help="ModelScope 模型 ID (默认: Qwen/Qwen3-32B)",
     )
     parser.add_argument(
         "--save_dir",
         type=str,
-        default="/mnt/nvme0/models/Qwen2.5-32B-Instruct",
-        help="本地保存目录 (默认: ./models/Qwen2.5-32B-Instruct)",
+        default="/mnt/nvme0/models/Qwen3-32B",
+        help="本地保存目录 (默认: /mnt/nvme0/models/Qwen3-32B)",
     )
     parser.add_argument(
         "--cache_dir",

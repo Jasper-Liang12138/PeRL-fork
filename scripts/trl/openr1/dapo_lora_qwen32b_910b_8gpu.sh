@@ -1,23 +1,23 @@
 #!/bin/bash
-# CTyunOS 22.06.2 训练脚本 - Qwen2.5-32B-Instruct + 8张华为昇腾910B
+# CTyunOS 22.06.2 训练脚本 - Qwen3-32B + 8张华为昇腾910B
 # 系统：CTyunOS 22.06.2@ascend-910b 64位
 # 硬件：8*HuaweiAscend 910B
-# 基础模型：Qwen/Qwen2.5-32B-Instruct
+# 基础模型：Qwen/Qwen3-32B
 
 # ============================================================
 # 【使用前必读】
 # 1. 先下载模型（如果还未下载）：
 #      python scripts/download_qwen25_32b_modelscope.py \
-#          --save_dir /mnt/nvme0/models/Qwen2.5-32B-Instruct
+#          --save_dir /mnt/nvme0/models/Qwen3-32B
 # 2. 修改下方 MODEL_PATH 为你的实际模型路径
 # 3. 32B 模型显存需求较大，建议调小 per_device_train_batch_size
 # ============================================================
 
 # ---------- 路径配置（按需修改）----------
-MODEL_PATH="${MODEL_PATH:-/mnt/nvme0/models/Qwen2.5-32B-Instruct}"
+MODEL_PATH="${MODEL_PATH:-/mnt/nvme0/models/Qwen3-32B}"
 
 unset WANDB_DISABLED
-OUTPUT_DIR=/mnt/nvme0/output/grpo_lora_qwen25_32b_ctyunos_910b_$(date +%Y%m%d_%H%M%S)
+OUTPUT_DIR=/mnt/nvme0/output/grpo_lora_qwen3_32b_ctyunos_910b_$(date +%Y%m%d_%H%M%S)
 LOG_FILE=${OUTPUT_DIR}/output.log
 
 mkdir -p "${OUTPUT_DIR}"
@@ -29,7 +29,7 @@ export HCCL_EXEC_TIMEOUT=1800
 export COMBINED_ENABLE=1       # 启用混合精度优化
 export TASK_QUEUE_ENABLE=1     # 启用任务队列优化
 
-# Qwen2.5-32B 显存优化：启用梯度检查点相关优化
+# Qwen3-32B 显存优化：启用梯度检查点相关优化
 export PYTORCH_NPU_ALLOC_CONF=expandable_segments:True
 
 echo "[INFO] 使用模型路径: ${MODEL_PATH}"
@@ -80,8 +80,8 @@ ACCELERATE_LOG_LEVEL=info \
     --config.training.loss_type "dapo" \
     --config.training.report_to '["wandb"]' \
     --config.logging.trackio_space_id "Open-Tinker/Open-Tinker" \
-    --config.logging.trackio_project "grpo-lora-qwen25-32b-ctyunos-910b" \
-    --config.logging.wandb_project "grpo-lora-qwen25-32b-ctyunos-910b" \
+    --config.logging.trackio_project "grpo-lora-qwen3-32b-ctyunos-910b" \
+    --config.logging.wandb_project "grpo-lora-qwen3-32b-ctyunos-910b" \
     --config.dataset.dataset_name_or_path "/root/PERL-FORK/ft-dataset/kicad_sft_dataset_590.json" \
     --config.dataset.example_numbers 1000000000 \
     2>&1 | tee "${LOG_FILE}"
